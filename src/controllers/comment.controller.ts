@@ -1,13 +1,15 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
-import { CommentService } from '../services/commentService';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { CommentService } from '../services/comment.service';
 import { CreateCommentDto, UpdateCommentDto, DeleteCommentDto } from '../dtos/comment.dto';
 import { Comment } from '../models/comment.model';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('comments')
 export class CommentController {
-  constructor(private readonly commentService: CommentService) {}
+  constructor(private readonly commentService: CommentService) { }
 
   @Post()
   async createComment(@Body() createCommentDto: CreateCommentDto): Promise<Comment> {

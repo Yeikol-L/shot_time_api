@@ -9,19 +9,23 @@ import * as schema from "../db/schema";
 
 @Injectable()
 export class UserService {
-  constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>){}
+  constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>) { }
   async createUser(userData: InsertUserPayload): Promise<User> {
     const user = await this.db.insert(usersTable).values(userData).returning();
     return user[0];
   }
 
-  async getUserById(userId: number): Promise<User | null> {
-    const user = await this.db
+  async getUserById(userId: number): Promise<Omit<User, 'password_hash'> | null> {
+    let result = await this.db
       .select()
       .from(usersTable)
       .where(eq(usersTable.id, userId))
       .execute();
-    return user[0] || null;
+    if (result[0]) {
+      const { password_hash, ...user } = result[0];
+      return user;
+    }
+    return null;
   }
 
   async updateUser(

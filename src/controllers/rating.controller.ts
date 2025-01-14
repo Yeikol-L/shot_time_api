@@ -1,14 +1,16 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
-import { RatingService } from '../services/ratingService';
-import { CreateRatingDto, UpdateRatingDto, DeleteRatingDto } from '../dtos/rating.dto';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { RatingService } from '../services/rating.service';
+import { CreateRatingDto, UpdateRatingDto } from '../dtos/rating.dto';
 import { Rating } from '../models/rating.model';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('ratings')
 export class RatingController {
-  constructor(private readonly ratingService: RatingService) {}
+  constructor(private readonly ratingService: RatingService) { }
 
   @Post()
   async createRating(@Body() createRatingDto: CreateRatingDto): Promise<Rating> {

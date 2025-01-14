@@ -1,14 +1,16 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
-import { ServiceService } from '../services/serviceService';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { ServiceService } from '../services/service.service';
 import { CreateServiceDto, UpdateServiceDto, DeleteServiceDto } from '../dtos/service.dto';
 import { Service } from '../models/service.model';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('services')
 export class ServiceController {
-  constructor(private readonly serviceService: ServiceService) {}
+  constructor(private readonly serviceService: ServiceService) { }
 
   @Post()
   async createService(@Body() createServiceDto: CreateServiceDto): Promise<Service> {

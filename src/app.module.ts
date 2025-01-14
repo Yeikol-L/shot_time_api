@@ -4,10 +4,10 @@ import { CategoryController } from './controllers/category.controller';
 import { CommentController } from './controllers/comment.controller';
 import { RatingController } from './controllers/rating.controller';
 import { ServiceController } from './controllers/service.controller';
-import { CategoryService } from './services/categoryService';
-import { CommentService } from './services/commentService';
-import { RatingService } from './services/ratingService';
-import { ServiceService } from './services/serviceService';
+import { CategoryService } from './services/category.service';
+import { CommentService } from './services/comment.service';
+import { RatingService } from './services/rating.service';
+import { ServiceService } from './services/service.service';
 import { UserService } from './services/user.service';
 import { ConfigModule } from '@nestjs/config';
 import { DrizzleModule } from './db/db.module';
@@ -16,8 +16,8 @@ import { JwtService } from '@nestjs/jwt';
 
 
 @Module({
-  imports: [DrizzleModule ,ConfigModule.forRoot({isGlobal: true}), AuthModule],
-  controllers: [CategoryController,CommentController,RatingController,ServiceController,UserController],
-  providers: [CategoryService,CommentService, RatingService, ServiceService, UserService, JwtService ],
+  imports: [DrizzleModule, ConfigModule.forRoot({ isGlobal: true }), AuthModule],
+  controllers: [CategoryController, CommentController, RatingController, ServiceController, UserController],
+  providers: [CategoryService, CommentService, RatingService, ServiceService, UserService, JwtService],
 })
-export class AppModule {}
+export class AppModule { }

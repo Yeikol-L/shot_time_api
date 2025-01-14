@@ -8,7 +8,6 @@ import {
   timestamp,
   decimal,
   check,
-  boolean,
   unique,
 } from 'drizzle-orm/pg-core';
 
