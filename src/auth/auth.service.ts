@@ -1,5 +1,5 @@
 // filepath: src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../services/user.service';
 import * as bcrypt from 'bcrypt';
@@ -11,7 +11,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(email: string, pass: string): Promise<Omit<User, 'password_hash'>> {
     const user = await this.userService.findUserByProperties({ email });
@@ -37,5 +37,13 @@ export class AuthService {
       password_hash: hashedPassword,
     });
     return newUser;
+  }
+  async changePassword(email: string, oldPass: string, newPass: string): Promise<void> {
+    const validatedUser = await this.validateUser(email, oldPass);
+    const newPassword = bcrypt.hashSync(newPass, 10);
+    const updatedUser = await this.userService.updateUser(validatedUser.id, { password_hash: newPassword });
+    if (updatedUser)
+      return;
+    throw new BadRequestException();
   }
 }
