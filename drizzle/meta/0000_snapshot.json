@@ -1,5 +1,5 @@
 {
-  "id": "021dd9cf-c05f-4fe7-ba1d-c7307682179d",
+  "id": "842678d5-b366-4061-aee2-b5371e9c4115",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -36,16 +36,16 @@
           "type": "day",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "start_time": {
-          "name": "start_time",
+        "opening_time": {
+          "name": "opening_time",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
-        "end_time": {
-          "name": "end_time",
+        "closing_time": {
+          "name": "closing_time",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true
@@ -117,87 +117,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.comments": {
-      "name": "comments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "comments_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "service_id": {
-          "name": "service_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "comment": {
-          "name": "comment",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parentComment": {
-          "name": "parentComment",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "comments_user_id_users_id_fk": {
-          "name": "comments_user_id_users_id_fk",
-          "tableFrom": "comments",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "comments_service_id_services_id_fk": {
-          "name": "comments_service_id_services_id_fk",
-          "tableFrom": "comments",
-          "tableTo": "services",
-          "columnsFrom": [
-            "service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.ratings": {
       "name": "ratings",
       "schema": "",
@@ -231,6 +150,37 @@
           "primaryKey": false,
           "notNull": true
         },
+        "reservation_id": {
+          "name": "reservation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "response": {
+          "name": "response",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentDate": {
+          "name": "commentDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "responseDate": {
+          "name": "responseDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "rating": {
           "name": "rating",
           "type": "numeric(2, 1)",
@@ -259,6 +209,19 @@
           "tableTo": "services",
           "columnsFrom": [
             "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ratings_reservation_id_reservations_id_fk": {
+          "name": "ratings_reservation_id_reservations_id_fk",
+          "tableFrom": "ratings",
+          "tableTo": "reservations",
+          "columnsFrom": [
+            "reservation_id"
           ],
           "columnsTo": [
             "id"
@@ -308,6 +271,18 @@
         },
         "date": {
           "name": "date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_time": {
+          "name": "end_time",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true
@@ -396,7 +371,13 @@
         },
         "price": {
           "name": "price",
-          "type": "numeric(4, 6)",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating": {
+          "name": "rating",
+          "type": "numeric(3, 2)",
           "primaryKey": false,
           "notNull": false
         },
@@ -406,11 +387,12 @@
           "primaryKey": false,
           "notNull": false
         },
-        "rating": {
-          "name": "rating",
-          "type": "numeric(2, 1)",
+        "service_duration": {
+          "name": "service_duration",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": 30
         }
       },
       "indexes": {},

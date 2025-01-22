@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { usersTable } from '../db/schema';
 import { InsertUserPayload, User } from '../models/user.model';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { PG_CONNECTION } from 'src/constants';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
@@ -10,19 +10,22 @@ import * as schema from "../db/schema";
 @Injectable()
 export class UserService {
   constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>) { }
-  async createUser(userData: InsertUserPayload): Promise<User> {
-    const user = await this.db.insert(usersTable).values(userData).returning();
-    return user[0];
+  async createUser(userData: InsertUserPayload): Promise<Omit<User, 'password_hash' | 'verification_code' | 'change_password_code'>> {
+    const {password_hash,verification_code,...user} = (await this.db.insert(usersTable).values(userData).returning())[0];
+    if(!user) 
+      throw new InternalServerErrorException("Error creating user");
+
+    return user!;
   }
 
-  async getUserById(userId: number): Promise<Omit<User, 'password_hash'> | null> {
+  async getUserById(userId: number): Promise<User | null> {
     let result = await this.db
       .select()
       .from(usersTable)
       .where(eq(usersTable.id, userId))
       .execute();
     if (result[0]) {
-      const { password_hash, ...user } = result[0];
+      const user  = result[0];
       return user;
     }
     return null;

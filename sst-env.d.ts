@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /* deno-fmt-ignore-file */
-
+import "sst"
+export {}
 declare module "sst" {
   export interface Resource {
     "MyService": {
@@ -13,9 +14,9 @@ declare module "sst" {
     "MyVpc": {
       "type": "sst.aws.Vpc"
     }
+    "profile-bucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
   }
 }
-/// <reference path="sst-env.d.ts" />
-
-import "sst"
-export {}

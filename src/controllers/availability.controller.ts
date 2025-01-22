@@ -1,33 +1,124 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
-import { CategoryService } from '../services/category.service';
-import { CreateCategoryDto, UpdateCategoryDto, DeleteCategoryDto } from '../dtos/category.dto';
-import { Category } from '../models/category.model';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+  UseGuards,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
+import { AvailabilityService } from 'src/services/availability.service';
+import {
+  AvailabilityDto,
+  CreateAvailabilityDto,
+  CreateAvailabilityResponseDto,
+  GetAvailabilityByIdResponseDto,
+  UpdateAvailabilityDto,
+} from 'src/dtos/availability.dto';
+import { Availability } from 'src/models/availability.model';
+import { ServiceService } from 'src/services/service.service';
+import { User, UserInfo } from 'src/user.decorator';
+import { MessageResponseDto } from 'src/dtos/auth.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
-@Controller('categories')
-export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) { }
+@Controller('avalability')
+export class AvailabilityController {
+  constructor(
+    private readonly availabilityService: AvailabilityService,
+    private readonly serviceService: ServiceService,
+  ) {}
 
   @Post()
-  async createCategory(@Body() createCategoryDto: CreateCategoryDto): Promise<Category> {
-    return this.categoryService.createCategory(createCategoryDto);
+  async createAvailability(
+    @Body() createAvailabilityDto: CreateAvailabilityDto,
+    @User() user: UserInfo,
+  ): Promise<CreateAvailabilityResponseDto> {
+    if (user.role === 'admin') {
+      const result = await this.availabilityService.createAvailability(
+        createAvailabilityDto,
+      );
+      if (!result) throw new UnauthorizedException();
+      return result;
+    }
+
+    if (user.sub !== createAvailabilityDto.user_id)
+      throw new UnauthorizedException();
+    return this.availabilityService.createAvailability(createAvailabilityDto);
   }
 
-  @Get(':id')
-  async getCategoryById(@Param('id') id: number): Promise<Category | null> {
-    return this.categoryService.getCategoryById(id);
+  @Get('/:id')
+  async getAvailabilityById(
+    @Param('id') id: number,
+    @User() user: UserInfo,
+  ): Promise<GetAvailabilityByIdResponseDto> {
+    const availability = await this.availabilityService.getAvailabilityById(id);
+    if (!availability) throw new UnauthorizedException();
+    const service = await this.serviceService.getServiceById(
+      availability.user_id,
+    );
+    if (service?.client_id === user.sub) return availability;
+    throw new UnauthorizedException();
   }
 
-  @Put(':id')
-  async updateCategory(@Param('id') id: number, @Body() updateCategoryDto: UpdateCategoryDto): Promise<Category | null> {
-    return this.categoryService.updateCategory(id, updateCategoryDto);
+  @Put('/:id')
+  async updateAvailabilityById(
+    @Param('id') id: number,
+    @Body() updateAvailabilityDto: UpdateAvailabilityDto,
+    @User() user: UserInfo,
+  ): Promise<MessageResponseDto> {
+    const { opening_time, closing_time, ...rest } = updateAvailabilityDto;
+    if (user.role === 'admin') {
+      const result = await this.availabilityService.updateAvailability(id, {
+        opening_time: opening_time ? new Date(opening_time) : undefined,
+        closing_time: closing_time ? new Date(closing_time) : undefined,
+        ...rest,
+      });
+      if (!result) throw new UnauthorizedException();
+      return { message: 'Availability updated successfully' };
+    }
+    const availability = await this.availabilityService.getAvailabilityById(id);
+    if (!availability) throw new NotFoundException();
+    const service = await this.serviceService.getServiceById(
+      availability.user_id,
+    );
+    if (service?.client_id === user.sub) {
+      const result = this.availabilityService.updateAvailability(id, {
+        opening_time: opening_time ? new Date(opening_time) : undefined,
+        closing_time: closing_time ? new Date(closing_time) : undefined,
+        ...rest,
+      });
+      if (!result) throw new UnauthorizedException();
+      return { message: 'Availability updated successfully' };
+    }
+    throw new UnauthorizedException();
   }
 
-  @Delete(':id')
-  async deleteCategory(@Param('id') id: number): Promise<void> {
-    return this.categoryService.deleteCategory(id);
+  @Delete('/:id')
+  async deleteAvailability(
+    @Param('id') id: number,
+    @User() user: UserInfo,
+  ): Promise<MessageResponseDto> {
+    if (user.role === 'admin') {
+      await this.availabilityService.deleteAvailability(id);
+      return { message: 'Availability deleted successfully' };
+    }
+    const availability = await this.availabilityService.getAvailabilityById(id);
+    if (!availability) throw new NotFoundException();
+    const service = await this.serviceService.getServiceById(
+      availability.user_id,
+    );
+    if (service?.client_id !== user.sub) throw new UnauthorizedException();
+    await this.availabilityService.deleteAvailability(id);
+    return { message: 'Availability deleted successfully' };
   }
 }

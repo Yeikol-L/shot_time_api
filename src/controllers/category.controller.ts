@@ -1,33 +1,71 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+  UseGuards,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CategoryService } from '../services/category.service';
-import { CreateCategoryDto, UpdateCategoryDto, DeleteCategoryDto } from '../dtos/category.dto';
-import { Category } from '../models/category.model';
+import {
+  CreateCategoryDto,
+  CreateCategoryResponseDto,
+  GetCategoryByIdDto,
+  UpdateCategoryDto,
+} from '../dtos/category.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { User, UserInfo } from 'src/user.decorator';
+import { MessageResponseDto } from 'src/dtos/auth.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('categories')
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) { }
+  constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  async createCategory(@Body() createCategoryDto: CreateCategoryDto): Promise<Category> {
-    return this.categoryService.createCategory(createCategoryDto);
+  async createCategory(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @User() user: UserInfo,
+  ): Promise<CreateCategoryResponseDto> {
+    if (user.role === 'admin')
+      return this.categoryService.createCategory(createCategoryDto);
+    throw new UnauthorizedException();
   }
 
-  @Get(':id')
-  async getCategoryById(@Param('id') id: number): Promise<Category | null> {
-    return this.categoryService.getCategoryById(id);
+  @Get('/:id')
+  async getCategoryById(@Param('id') id: number): Promise<GetCategoryByIdDto> {
+    const category = await this.categoryService.getCategoryById(id);
+    if (!category) throw new UnauthorizedException();
+    return category;
   }
 
-  @Put(':id')
-  async updateCategory(@Param('id') id: number, @Body() updateCategoryDto: UpdateCategoryDto): Promise<Category | null> {
-    return this.categoryService.updateCategory(id, updateCategoryDto);
+  @Put('/:id')
+  async updateCategory(
+    @Param('id') id: number,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+    @User() user: UserInfo,
+  ): Promise<MessageResponseDto> {
+    if (user.role !== 'admin') throw new UnauthorizedException();
+    const result = await this.categoryService.updateCategory(
+      id,
+      updateCategoryDto,
+    );
+    if (!result) throw new UnauthorizedException();
+    return { message: 'Category updated successfully' };
   }
 
-  @Delete(':id')
-  async deleteCategory(@Param('id') id: number): Promise<void> {
-    return this.categoryService.deleteCategory(id);
+  @Delete('/:id')
+  async deleteCategory(
+    @Param('id') id: number,
+    @User() user: UserInfo,
+  ): Promise<MessageResponseDto> {
+    if (user.role !== 'admin') throw new UnauthorizedException();
+    await this.categoryService.deleteCategory(id);
+    return { message: 'Category deleted successfully' };
   }
 }

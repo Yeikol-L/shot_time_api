@@ -30,7 +30,7 @@ export class AuthService {
     };
   }
 
-  async register(user: Omit<User, 'id' | 'created_at'>) {
+  async register(user: Omit<User, 'id' | 'created_at'>): Promise<Omit<User, 'password_hash' | 'verification_code' | 'change_password_code' > | null> {
     const hashedPassword = bcrypt.hashSync(user.password_hash, 10);
     const newUser = await this.userService.createUser({
       ...user,
@@ -45,5 +45,12 @@ export class AuthService {
     if (updatedUser)
       return;
     throw new BadRequestException();
+  }
+  async forgotPassword(email: string, newPass: string, code: number): Promise<void> {
+    const user = await this.userService.findUserByProperties({ email });
+    if (user.length === 0) throw new UnauthorizedException();
+    if (user[0].change_password_code !== code) throw new UnauthorizedException();
+    const newPassword = bcrypt.hashSync(newPass, 10);
+    await this.userService.updateUser(user[0].id, { password_hash: newPassword });
   }
 }

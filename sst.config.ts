@@ -11,9 +11,14 @@ export default $config({
   },
   async run() {
     const vpc = new sst.aws.Vpc('MyVpc');
+    // const email = new sst.aws.Email("MyEmail", {
+    //   sender: "anmysoft.net",
+    // }, {});
+    const bucket = new sst.aws.Bucket("profile-bucket", {access: 'public' });
     const cluster = new sst.aws.Cluster('MyCluster', { vpc });
 
     cluster.addService('MyService', {
+      link: [bucket],
       loadBalancer: {
         ports: [{ listen: '80/http', forward: '3000/http' }],
       },
@@ -21,5 +26,6 @@ export default $config({
         command: 'npm run start:dev',
       },
     });
+    return {bucket}
   },
 });

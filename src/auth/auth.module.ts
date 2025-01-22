@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DrizzleModule } from 'src/db/db.module';
+import { MailService } from 'src/services/mail.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { DrizzleModule } from 'src/db/db.module';
       }),
     }),
   ],
-  providers: [AuthService, UserService],
+  providers: [AuthService, UserService, MailService],
   controllers: [AuthController],
 })
 export class AuthModule {}

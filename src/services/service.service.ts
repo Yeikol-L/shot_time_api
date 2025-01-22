@@ -10,9 +10,14 @@ import * as schema from "../db/schema";
 @Injectable()
 export class ServiceService {
   constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>){}
+  async getAllServices(client_id?: number, category_id?: number): Promise<Service[]> {
+    const servicesQuery = this.db.select().from(servicesTable);
+    if(client_id) servicesQuery.where(eq(servicesTable.client_id, client_id));
+    if(category_id) servicesQuery.where(eq(servicesTable.category_id, category_id));
+    return await servicesQuery.execute();
+  }
   async createService(data: InsertServicePayload): Promise<Service> {
     const service = await this.db.insert(servicesTable).values(data).returning();
-
     return service[0];
   }
 

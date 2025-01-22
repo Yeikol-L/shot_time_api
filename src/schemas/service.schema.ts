@@ -11,9 +11,15 @@ export const serviceSchema = z.object({
   price : decimalString(10, 2),
   category_id: z.number().nullable(),
   rating: decimalString(3, 2).nullable(),
+  service_duration: z.number().int().positive().default(30),
 });
 
 export const createServiceSchema = serviceSchema.omit({ id: true });
+export const createServiceSchemaResponse = serviceSchema;
+export const getServiceSchemaByIdResponse = serviceSchema;
+export const getAllServicesSchemaResponse = z.object({
+  results: z.array(serviceSchema),
+});
 export const updateServiceSchema = createServiceSchema.partial();
 export const deleteServiceSchema = z.object({
   id: z.number().int(),

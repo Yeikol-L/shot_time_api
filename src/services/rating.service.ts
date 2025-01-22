@@ -13,6 +13,10 @@ export class RatingService {
     const rating = await this.db.insert(ratingsTable).values(data).returning();
     return rating[0];
   }
+  async getAll(service_id: number): Promise<Rating[]> {
+    const ratings = await this.db.select().from(ratingsTable).where(eq(ratingsTable.service_id, service_id)).execute();
+    return ratings;
+  }
 
   async getRatingById(id: number): Promise<Rating | null> {
     const rating = await this.db
@@ -42,7 +46,7 @@ export class RatingService {
   async findRatingByProperties(properties: Partial<Rating>): Promise<Rating[]> {
     const query = this.db.select().from(ratingsTable);
     for (const [key, value] of Object.entries(properties)) {
-      query.where(eq(ratingsTable[key as keyof Rating], value));
+      query.where(eq(ratingsTable[key as keyof Rating], value as any));
     }
     const ratings = await query.execute();
     return ratings;

@@ -8,14 +8,14 @@ import {
   timestamp,
   decimal,
   check,
-  unique,
+  boolean,
 } from 'drizzle-orm/pg-core';
 
 export const roleEnum = pgEnum('user_role', ['client', 'user', 'admin']);
 
 export const usersTable = pgTable('users', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  role: roleEnum(),
+  role: roleEnum().notNull(),
   name: varchar({ length: 100 }).notNull(),
   email: varchar({ length: 100 }).notNull().unique(),
   password_hash: text().notNull(),
@@ -25,10 +25,13 @@ export const usersTable = pgTable('users', {
   business_name: varchar({ length: 100 }),
   business_address: text(),
   phone_number: varchar({ length: 15 }),
+
+  verification_code: integer(),
+  change_password_code: integer(),
+  verified: boolean().default(false).notNull(),
 });
 export const userRelations = relations(usersTable, ({ many }) => ({
   services: many(servicesTable),
-  comments: many(commentsTable),
 }));
 
 export const categoriesTable = pgTable('categories', {
@@ -59,6 +62,7 @@ export const servicesTable = pgTable(
     price: decimal({ precision: 10, scale: 2 }).notNull(),
     rating: decimal({ precision: 3, scale: 2 }),
     category_id: integer().references(() => categoriesTable.id),
+    service_duration: integer().notNull().default(30),
   },
   (table) => [
     {
@@ -70,55 +74,29 @@ export const servicesTable = pgTable(
   ],
 );
 
-export const availabilityTable = pgTable(
-  'availability',
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    service_id: integer().notNull().references(() => servicesTable.id),
-    day: dayEnum(),
-    start_time: timestamp().notNull(),
-    end_time: timestamp().notNull(),
-  },
-  (table) => [
-    { uniqueConstraint: unique('service_day').on(table.service_id, table.day) },
-  ],
-);
+export const availabilityTable = pgTable('availability', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: integer().notNull().references(() => usersTable.id),
+  day: dayEnum().notNull(), // Day of the week (recurring)
+  opening_time: timestamp().notNull(),
+  closing_time: timestamp().notNull(),
+});
 
-
+// export const noJobDaysTable = pgTable('no_job_days', {
+//   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+//   service_id: integer().notNull().references(() => servicesTable.id),
+//   date: timestamp().notNull().unique(), // Specific date
+// });
 
 export const servicesRelations = relations(servicesTable, ({ one, many }) => ({
   user: one(usersTable, {
     fields: [servicesTable.id],
     references: [usersTable.id],
   }),
-  comments: many(commentsTable),
   ratings: many(ratingsTable),
   category: one(categoriesTable, {
     fields: [servicesTable.category_id],
     references: [categoriesTable.id],
-  }),
-}));
-
-export const commentsTable = pgTable('comments', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  user_id: integer().notNull().references(() => usersTable.id),
-  service_id: integer().notNull().references(() => servicesTable.id),
-  comment: text().notNull(),
-  parentComment: integer(),
-});
-
-export const commentsRelations = relations(commentsTable, ({ one }) => ({
-  user: one(usersTable, {
-    fields: [commentsTable.user_id],
-    references: [usersTable.id],
-  }),
-  service: one(servicesTable, {
-    fields: [commentsTable.service_id],
-    references: [servicesTable.id],
-  }),
-  parentComment: one(commentsTable, {
-    fields: [commentsTable.parentComment],
-    references: [commentsTable.id],
   }),
 }));
 
@@ -128,6 +106,11 @@ export const ratingsTable = pgTable(
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     user_id: integer().notNull().references(() => usersTable.id),
     service_id: integer().notNull().references(() => servicesTable.id),
+    reservation_id: integer().notNull().references(() => reservationsTable.id),
+    comment: text().notNull(),
+    response: text(),
+    commentDate: timestamp().notNull().defaultNow(),
+    responseDate: timestamp(),
     rating: decimal({ precision: 2, scale: 1 }).notNull(),
   },
   (table) => [
@@ -163,5 +146,18 @@ export const reservationsTable = pgTable('reservations', {
   user_id: integer().notNull().references(() => usersTable.id),
   service_id: integer().notNull().references(() => servicesTable.id),
   date: timestamp().notNull(),
-  status: reservationStatus(),
+  start_time: timestamp().notNull(),
+  end_time: timestamp().notNull(),
+  status: reservationStatus().notNull(),
 });
+
+export const reservationRelations = relations(reservationsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [reservationsTable.user_id],
+    references: [usersTable.id],
+  }),
+  service: one(servicesTable, {
+    fields: [reservationsTable.service_id],
+    references: [servicesTable.id],
+  }),
+}));

@@ -14,6 +14,11 @@ export class CategoryService {
     return category[0];
   }
 
+  async getAllCategories(): Promise<Category[]> {
+    const categories = await this.db.select().from(categoriesTable).execute();
+    return categories;
+  }
+
   async getCategoryById(id: number): Promise<Category | null> {
     const category = await this.db
       .select()

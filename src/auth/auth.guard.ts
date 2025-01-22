@@ -37,8 +37,6 @@ import { ConfigService } from '@nestjs/config';
     }
   
     private extractTokenFromHeader(request: Request): string | undefined {
-        console.log(request.headers.bearer );
-        console.log(request.headers.authorization);
         if(request.headers.bearer){
             return request.headers.bearer as string;
         } else {
