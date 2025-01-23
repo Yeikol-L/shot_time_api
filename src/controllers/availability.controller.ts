@@ -22,9 +22,9 @@ import {
   CreateAvailabilityDto,
   CreateAvailabilityResponseDto,
   GetAvailabilityByIdResponseDto,
+  GetAvailabilityOfDateDto,
   UpdateAvailabilityDto,
 } from 'src/dtos/availability.dto';
-import { Availability } from 'src/models/availability.model';
 import { ServiceService } from 'src/services/service.service';
 import { User, UserInfo } from 'src/user.decorator';
 import { MessageResponseDto } from 'src/dtos/auth.dto';
@@ -54,6 +54,16 @@ export class AvailabilityController {
     if (user.sub !== createAvailabilityDto.user_id)
       throw new UnauthorizedException();
     return this.availabilityService.createAvailability(createAvailabilityDto);
+  }
+  @Post('/availability-of-date')
+  async getAvailabilityOfDate(
+    @Body() availabilityDto: GetAvailabilityOfDateDto,
+    @User() user: UserInfo,
+  ){
+    const fecha =new Date(availabilityDto.date);
+    fecha.setHours(0,0,0,0)
+    const result = await this.availabilityService.getAvailabilityOfClient(availabilityDto.user_id, fecha, availabilityDto.duration);
+    return result;
   }
 
   @Get('/:id')

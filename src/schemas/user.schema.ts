@@ -11,6 +11,7 @@ export const userSchema = z.object({
   profile_picture: z.string().nullable(),
   category_id: z.number().int().nullable(),
   created_at: z.string().datetime(),
+  rating: z.string().nullable(),
   business_name: z.string().max(100).nullable(),
   business_address: z.string().nullable(),
   phone_number: z.string().max(15).nullable(),

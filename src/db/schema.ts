@@ -22,6 +22,7 @@ export const usersTable = pgTable('users', {
   profile_picture: text(),
   created_at: timestamp().notNull().defaultNow(),
 
+  rating: decimal({ precision: 2, scale: 1 }),
   category_id: integer().references(() => categoriesTable.id),
   business_name: varchar({ length: 100 }),
   business_address: text(),
@@ -66,17 +67,9 @@ export const servicesTable = pgTable(
     description: text(),
     picture: text(),
     price: decimal({ precision: 10, scale: 2 }).notNull(),
-    rating: decimal({ precision: 3, scale: 2 }),
     service_duration: integer().notNull().default(30),
-  },
-  (table) => [
-    {
-      unique: check(
-        'rating_check',
-        sql`${table.rating} <= 5 AND ${table.rating} >= 0`,
-      ),
-    },
-  ],
+  }
+
 );
 
 export const availabilityTable = pgTable('availability', {

@@ -1,3 +1,4 @@
+import { d } from 'drizzle-kit/index-Z-1TKnbX';
 import { z } from 'zod';
 
 const dayEnum = z.enum([
@@ -17,6 +18,11 @@ export const availabilitySchema = z.object({
   opening_time: z.string().datetime(),
   closing_time: z.string().datetime(),
 });
+export const getAvailabilityOfDateSchema = z.object({
+  user_id: z.number().int(),
+  date: z.string().datetime(),
+  duration: z.number().int(),
+})
 
 const extended = availabilitySchema.extend({
   opening_time: z.date(),

@@ -11,6 +11,11 @@ export class RatingService {
   constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>){}
   async createRating(data: InsertRatingPayload): Promise<Rating> {
     const rating = await this.db.insert(ratingsTable).values(data).returning();
+    const service = (await this.db.select().from(schema.servicesTable).where(eq(schema.servicesTable.id, data.service_id)).execute())[0];
+    // Calculate client new rating
+    const ratings = await this.findRatingByClient(service.client_id);
+    const newRating = ratings.reduce((acc, e) => acc + Number(e.rating), 0) / ratings.length;
+    await this.db.update(schema.usersTable).set({rating: newRating.toString()}).where(eq(schema.usersTable.id, service.client_id)).execute();
     return rating[0];
   }
   async getAll(service_id: number): Promise<Rating[]> {

@@ -48,7 +48,8 @@ export class AuthController {
       verification_code: code,
       verified: false,
       change_password_code: null,
-      category_id: null
+      category_id: null,
+      rating: '0'
     });
     if (!user) throw new UnauthorizedException();
     try {
