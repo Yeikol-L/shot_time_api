@@ -98,7 +98,7 @@ export class ReservationController {
       });
       if (result) return { message: 'Reservation updated' };
     }
-    if (reservation.user_id === user.sub) {
+    if (reservation.user_id === user.sub || user.role === 'client') {
       const result = await this.reservationService.updateReservation(id, {
         start_time: start_time ? new Date(start_time) : undefined,
         end_time: end_time ? new Date(end_time) : undefined,

@@ -42,6 +42,15 @@ export class RatingService {
   async deleteRating(id: number): Promise<void> {
     await this.db.delete(ratingsTable).where(eq(ratingsTable.id, id)).execute();
   }
+  async findRatingByClient(client_id: number): Promise<Rating[]> {
+    const ratings = await this.db
+      .select()
+      .from(ratingsTable)
+      .where(eq(schema.servicesTable.client_id, client_id))
+        .innerJoin(schema.servicesTable, eq(ratingsTable.service_id, schema.servicesTable.id))
+      .execute();
+    return ratings.map(e => e.ratings);
+  }
 
   async findRatingByProperties(properties: Partial<Rating>): Promise<Rating[]> {
     const query = this.db.select().from(ratingsTable);

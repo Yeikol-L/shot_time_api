@@ -44,14 +44,22 @@ export class RatingController {
     if (!reservation) throw new BadRequestException('Reservation not found');
     if (reservation.user_id !== user.sub)
       throw new BadRequestException('You can only rate your own reservations');
-    if (reservation.status === 'done')
-      return await this.ratingService.createRating(createRatingDto);
+    if (reservation.status === 'done'){
+      const data = {...createRatingDto, commentDate: new Date(createRatingDto.commentDate), responseDate: null};
+      return await this.ratingService.createRating(data);
+    }
     throw new BadRequestException('You can only rate done reservations');
   }
   @Get('/:id/all')
   async getAllRatings(@Param('id') id: number): Promise<GetAllRatingsDto> {
     return {
       results: await this.ratingService.getAll(id),
+    };
+  }
+  @Get('/client/:id')
+  async getClientRatings(@Param('id') id: number): Promise<GetAllRatingsDto> {
+    return {
+      results: await this.ratingService.findRatingByClient(id),
     };
   }
 
