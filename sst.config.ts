@@ -11,9 +11,6 @@ export default $config({
   },
   async run() {
     const vpc = new sst.aws.Vpc('MyVpc');
-    // const email = new sst.aws.Email("MyEmail", {
-    //   sender: "anmysoft.net",
-    // }, {});
     const bucket = new sst.aws.Bucket("profile-bucket", {access: 'public' });
     const cluster = new sst.aws.Cluster('MyCluster', { vpc });
 

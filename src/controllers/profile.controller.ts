@@ -25,12 +25,7 @@ export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Post('upload-profile-picture')
-  @UseInterceptors(FileInterceptor('file', {fileFilter: (req,file,cb) => {
-    if(file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/png') {
-      return cb(new Error('Only JPEG and PNG files are allowed'), false);
-    }
-    return cb(null,true);
-  }}))
+  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Profile picture',

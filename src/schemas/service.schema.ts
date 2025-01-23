@@ -9,7 +9,6 @@ export const serviceSchema = z.object({
   name: z.string().max(100),
   description: z.string().nullable(),
   price : decimalString(10, 2),
-  category_id: z.number().nullable(),
   rating: decimalString(3, 2).nullable(),
   service_duration: z.number().int().positive().default(30),
 });

@@ -22,6 +22,7 @@ export const usersTable = pgTable('users', {
   profile_picture: text(),
   created_at: timestamp().notNull().defaultNow(),
 
+  category_id: integer().references(() => categoriesTable.id),
   business_name: varchar({ length: 100 }),
   business_address: text(),
   phone_number: varchar({ length: 15 }),
@@ -30,8 +31,12 @@ export const usersTable = pgTable('users', {
   change_password_code: integer(),
   verified: boolean().default(false).notNull(),
 });
-export const userRelations = relations(usersTable, ({ many }) => ({
+export const userRelations = relations(usersTable, ({ many, one }) => ({
   services: many(servicesTable),
+  category: one(categoriesTable, {
+    fields: [usersTable.category_id],
+    references: [categoriesTable.id],
+  })
 }));
 
 export const categoriesTable = pgTable('categories', {
@@ -59,9 +64,9 @@ export const servicesTable = pgTable(
     client_id: integer().notNull(),
     name: varchar({ length: 100 }).notNull(),
     description: text(),
+    picture: text(),
     price: decimal({ precision: 10, scale: 2 }).notNull(),
     rating: decimal({ precision: 3, scale: 2 }),
-    category_id: integer().references(() => categoriesTable.id),
     service_duration: integer().notNull().default(30),
   },
   (table) => [
@@ -94,10 +99,6 @@ export const servicesRelations = relations(servicesTable, ({ one, many }) => ({
     references: [usersTable.id],
   }),
   ratings: many(ratingsTable),
-  category: one(categoriesTable, {
-    fields: [servicesTable.category_id],
-    references: [categoriesTable.id],
-  }),
 }));
 
 export const ratingsTable = pgTable(

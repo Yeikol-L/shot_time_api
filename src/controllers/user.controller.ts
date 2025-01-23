@@ -46,7 +46,7 @@ export class UserController {
         results: (await this.userService.findUserByProperties({
           role: 'client',
         })).map(u => {
-          const {password_hash, verification_code, verified, change_password_code,...user} = u
+          const {password_hash, verification_code,  change_password_code,...user} = u
           return user
         }),
       };

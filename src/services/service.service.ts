@@ -6,14 +6,53 @@ import { Inject } from '@nestjs/common';
 import { PG_CONNECTION } from 'src/constants';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from "../db/schema";
+import { PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 
 @Injectable()
 export class ServiceService {
-  constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>){}
-  async getAllServices(client_id?: number, category_id?: number): Promise<Service[]> {
+  private readonly s3: S3Client;
+  constructor(@Inject(PG_CONNECTION) private db: NeonHttpDatabase<typeof schema>){
+    this.s3 = new S3Client({
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+      },
+    });
+  }
+  async uploadServicePicture(
+    file: Express.Multer.File,
+    serviceId: number,
+  ): Promise<void> {
+    try {
+      const params: PutObjectCommandInput = {
+        Bucket: "short-time-api",
+        Key: "",
+        ContentType: file.mimetype,
+        Body: file.buffer,
+      };
+      // create arandom name
+      const randomName = `${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`;
+      // create a new name for the file
+      const newFileName = `${randomName}.${file.originalname.split('.').pop()}`;
+      params.Key = newFileName;
+
+      const upload = new Upload({
+        params,
+        client: this.s3,
+      });
+      const result = await upload.done();
+      await this.updateService(serviceId, {
+        picture: result.Location,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async getAllServices(client_id?: number): Promise<Service[]> {
     const servicesQuery = this.db.select().from(servicesTable);
     if(client_id) servicesQuery.where(eq(servicesTable.client_id, client_id));
-    if(category_id) servicesQuery.where(eq(servicesTable.category_id, category_id));
     return await servicesQuery.execute();
   }
   async createService(data: InsertServicePayload): Promise<Service> {

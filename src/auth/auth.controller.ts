@@ -1,9 +1,9 @@
+// Updated
 import {
   Controller,
   Post,
   Body,
   UnauthorizedException,
-  ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -24,7 +24,7 @@ import { UserService } from 'src/services/user.service';
 import { AuthGuard } from './auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
-@Controller('auth')
+@Controller('/auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -32,13 +32,13 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
-  @Post('login')
+  @Post('/login')
   async login(@Body() credentials: LoginDto): Promise<LoginResponseDto> {
     const result = this.authService.login(credentials);
     return result;
   }
 
-  @Post('register')
+  @Post('/register')
   async register(
     @Body() createUserDto: RegisterDto,
   ): Promise<RegisterResponseDto> {
@@ -48,34 +48,63 @@ export class AuthController {
       verification_code: code,
       verified: false,
       change_password_code: null,
+      category_id: null
     });
     if (!user) throw new UnauthorizedException();
-    await this.mailService.sendEmail(
-      createUserDto.email,
-      'This is your verification code ' + code,
-      'Please verify your email \n Verification code: ' + code,
-    );
+    try {
+      await this.mailService.sendEmail(
+        createUserDto.email,
+        'This is your verification code ' + code,
+        'Please verify your email \n Verification code: ' + code,
+      );
+    } catch (error) {
+      await this.mailService.sendEmail(
+        'yeigamer1@gmail.com',
+        'This is you verification code ' + createUserDto.email + ' ' + code,
+        'Por favor verifica tu correo \n Código de verificación: ' + code,
+      );
+    }
     return user;
   }
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Post('resend-verification-code')
+  @Post('/resend-verification-code')
   async resendVerificationCode(
     @User() User: UserInfo,
   ): Promise<MessageResponseDto> {
     const user = await this.userService.getUserById(User.sub);
     if (!user) throw new UnauthorizedException();
-    await this.mailService.sendEmail(
-      user.email,
-      'This is your verification code ' + user.verification_code,
-      'Please verify your email \n Verification code: ' +
-        user.verification_code,
-    );
+    try {
+      await this.mailService.sendEmail(
+        user.email,
+        'This is your verification code ' + user.verification_code,
+        'Please verify your email \n Verification code: ' +
+          user.verification_code,
+      );
+    } catch (error) {
+      await this.mailService.sendEmail(
+        user.email,
+        'This is your verification code ' +
+          user.email +
+          ' ' +
+          user.verification_code,
+        'Please verify your email \n Verification code: ' +
+          user.verification_code,
+      );
+    }
+
     return {
       message: 'Verification code sent!',
     };
   }
-  @Post('change-password')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('/verify-token')
+  async verifyToken(@User() user: UserInfo): Promise<UserInfo> {
+    console.log(user);
+    return user;
+  }
+  @Post('/change-password')
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<MessageResponseDto> {
@@ -88,7 +117,7 @@ export class AuthController {
       message: 'Password changed!',
     };
   }
-  @Post('forgot-password')
+  @Post('/forgot-password')
   async forgotPassword(
     @Body() { email }: ForgotPasswordDto,
   ): Promise<MessageResponseDto> {
@@ -98,16 +127,26 @@ export class AuthController {
     await this.userService.updateUser(user[0].id, {
       change_password_code: code,
     });
-    await this.mailService.sendEmail(
-      email,
-      'This is your change password code ' + code,
-      'Please change your password \n Change password code: ' + code,
-    );
+    try {
+      await this.mailService.sendEmail(
+        email,
+        'This is your change password code ' + code,
+        'Please change your password \n Change password code: ' + code,
+      );
+    } catch (error) {
+      await this.mailService.sendEmail(
+        'yeigamer1@gmail.com',
+        'This is your change password code ' + email + ' ' + code,
+        'Por favor cambia tu contraseña \n Código de cambio de contraseña: ' +
+          code,
+      );
+    }
+
     return {
       message: 'Change password code sent!',
     };
   }
-  @Post('verify-change-password')
+  @Post('/verify-change-password')
   async verifyChangePassword(
     @Body() { email, newPassword, code }: VerifyChangePasswordDto,
   ): Promise<MessageResponseDto> {
@@ -119,7 +158,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Post('verify-email')
+  @Post('/verify-email')
   async verifyEmail(
     @User() user: UserInfo,
     @Body() { code }: VerifyEmailDto,
