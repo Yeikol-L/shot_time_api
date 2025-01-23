@@ -102,7 +102,6 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post('/verify-token')
   async verifyToken(@User() user: UserInfo): Promise<UserInfo> {
-    console.log(user);
     return user;
   }
   @Post('/change-password')

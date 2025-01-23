@@ -28,6 +28,7 @@ import {
 import { ServiceService } from 'src/services/service.service';
 import { User, UserInfo } from 'src/user.decorator';
 import { MessageResponseDto } from 'src/dtos/auth.dto';
+import {toDate} from "date-fns"
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
@@ -60,8 +61,11 @@ export class AvailabilityController {
     @Body() availabilityDto: GetAvailabilityOfDateDto,
     @User() user: UserInfo,
   ){
-    const fecha =new Date(availabilityDto.date);
-    fecha.setHours(0,0,0,0)
+    const [year,month,day] = availabilityDto.date.split('-');
+    console.log(year,month,day);
+    const fecha = toDate(new Date(Number(year), Number(month)-1, Number(day)));
+    
+
     const result = await this.availabilityService.getAvailabilityOfClient(availabilityDto.user_id, fecha, availabilityDto.duration);
     return result;
   }

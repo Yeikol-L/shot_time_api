@@ -55,6 +55,7 @@ export class ReservationController {
         date: new Date(date),
         ...rest,
       });
+      console.log(user.sub, createReservationDto.user_id)
     if (user.sub === createReservationDto.user_id)
       return this.reservationService.createReservation({
         start_time: new Date(start_time),

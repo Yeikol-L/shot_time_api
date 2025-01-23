@@ -20,7 +20,7 @@ export const availabilitySchema = z.object({
 });
 export const getAvailabilityOfDateSchema = z.object({
   user_id: z.number().int(),
-  date: z.string().datetime(),
+  date: z.string(),
   duration: z.number().int(),
 })
 

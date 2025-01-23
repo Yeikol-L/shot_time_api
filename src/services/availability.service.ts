@@ -6,7 +6,7 @@ import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from '../db/schema';
 import { eq, and, or, not } from 'drizzle-orm';
 import { availabilityTable, reservationsTable } from '../db/schema';
-import {areIntervalsOverlapping} from 'date-fns'
+import {areIntervalsOverlapping, getDay} from 'date-fns'
 
 @Injectable()
 export class AvailabilityService {
@@ -33,8 +33,9 @@ export class AvailabilityService {
   ): Promise<{
     results: { startTime: string; endTime: string; available: boolean }[];
   }> {
-
-    const dayOfWeek = date.getDay();
+    
+    const dayOfWeek = getDay(date);
+    console.log(dayOfWeek)
     let day: string;
     switch (dayOfWeek) {
       case 0:
@@ -68,6 +69,7 @@ export class AvailabilityService {
         eq(availabilityTable.user_id, user_id),
       ),
     });
+    console.log(availability)
     if(!availability) return { results: [] };
 
     const reservations = await this.db
